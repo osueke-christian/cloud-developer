@@ -35,3 +35,12 @@ UserInterfaceState.xcuserstate
 node_modules
 venv/
 .vscode
+
+.env
+*.env
+.env.*
+!.env.example
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -1,6 +1,10 @@
-import express from 'express';
+import express, { 
+  Request,
+  Response
+} from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import { auth } from './middlewares/auth';
 
 (async () => {
 
@@ -28,6 +32,28 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+
+  app.get('/filteredimage', auth,  async (req: Request, res: Response) => {
+    try{
+      const { image_url }: {image_url: string} = req.query;
+      if(!image_url){
+        res.status(401).send({
+          status: 'failed',
+          message: 'No image specified'
+        });
+      }
+  
+      const filteredImage = await filterImageFromURL(image_url);
+      res.status(200).sendFile(filteredImage);
+    }
+    catch(error){
+      res.status(422).send({
+        status: 'failed',
+        message: 'could not process image',
+        errors: error
+      })
+    }
+  })
 
   //! END @TODO1
   
