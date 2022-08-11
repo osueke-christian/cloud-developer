@@ -20,7 +20,7 @@ export async function createTodo(
   const todoId = uuid.v4()
   const s3BucketName = process.env.S3_BUCKET_NAME
 
-  return await todoAccess.createTodo({
+  return todoAccess.createTodo({
     userId,
     todoId,
     ...createTodoRequest,

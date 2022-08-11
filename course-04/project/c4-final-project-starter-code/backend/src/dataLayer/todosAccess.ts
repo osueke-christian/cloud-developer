@@ -1,29 +1,32 @@
 import * as AWS  from 'aws-sdk'
-// import * as AWSXRay from 'aws-xray-sdk'
 import { Types } from 'aws-sdk/clients/s3';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate';
+import { createLogger } from '../utils/logger';
 
-// const XAWS = AWSXRay.captureAWS(AWS)
+const AWSXRay = require('aws-xray-sdk');
+const XAWS = AWSXRay.captureAWS(AWS)
+
+const logger = createLogger('todosAccess')
 
 function createDynamoDBClient() {
   if (process.env.IS_OFFLINE) {
-    console.log('Creating a local DynamoDB instance')
-    return new AWS.DynamoDB.DocumentClient({
+    logger.info('Creating a local DynamoDB instance')
+    return new XAWS.DynamoDB.DocumentClient({
       region: 'localhost',
       endpoint: 'http://localhost:8000'
     })
   }
 
-  return new AWS.DynamoDB.DocumentClient()
+  return new XAWS.DynamoDB.DocumentClient()
 }
 
 export class TodoAccess {
   constructor(
     private readonly docClient: DocumentClient = createDynamoDBClient(),
     private readonly todosTable = process.env.TODOS_TABLE,
-    private readonly s3Client: Types = new AWS.S3({ signatureVersion: 'v4' }),
+    private readonly s3Client: Types = new XAWS.S3({ signatureVersion: 'v4' }),
     private readonly s3BucketName = process.env.S3_BUCKET_NAME
   ){}
 
@@ -33,7 +36,7 @@ export class TodoAccess {
    * @returns 
    */
   async getAllTodos(userId: string): Promise<TodoItem[]> {
-    console.log('Getting all todos')
+    logger.info('Getting all todos')
 
     const params = {
         TableName: this.todosTable,
@@ -58,7 +61,7 @@ export class TodoAccess {
    * @returns 
    */
   async createTodo(todoItem: TodoItem): Promise<TodoItem> {
-    console.log("Creating new todo");
+    logger.info("Creating new todo");
 
     const params = {
         TableName: this.todosTable,
@@ -78,7 +81,7 @@ export class TodoAccess {
    * @returns 
    */
   async updateTodo(userId: string, todoId: string, todoUpdate: TodoUpdate): Promise<TodoUpdate> {
-    console.log("Updating todo");
+    logger.info("Updating todo");
 
     const params = {
         TableName: this.todosTable,
@@ -113,7 +116,7 @@ export class TodoAccess {
    * @returns 
    */
   async deleteToDo(userId: string, todoId: string): Promise<void> {
-    console.log("Deleting todo");
+    logger.info("Deleting todo");
 
     const params = {
         TableName: this.todosTable,
@@ -135,7 +138,7 @@ export class TodoAccess {
    * @returns 
    */
   async generateUploadUrl(todoId: string): Promise<string> {
-    console.log("Generating URL");
+    logger.info("Generating URL");
 
     const url = this.s3Client.getSignedUrl('putObject', {
         Bucket: this.s3BucketName,
